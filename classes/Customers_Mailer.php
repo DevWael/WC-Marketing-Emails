@@ -63,7 +63,7 @@ class Customers_Mailer {
 	public function SendMail( $send_to, $subject, $content, $headers = '' ) {
 		//Helpers::log( $send_to );
 		$this->mailer = \WC()->mailer();
-		$message      = $this->EmailMessageContent( $subject, $content );
+		$message      = $this->EmailMessageContent( $subject, apply_filters( 'wcme_email_content', $content ) /* modify email content */ );
 		$this->mailer->send( $send_to, $subject, $message, $headers );
 	}
 
@@ -93,15 +93,17 @@ class Customers_Mailer {
 		$allowed_tags  = Helpers::allowed_html_tags();
 
 		if ( isset( $_POST['sender_mail'] ) && \is_email( $_POST['sender_mail'] ) ) {
-			$sender_mail = \sanitize_email( $_POST['sender_mail'] );
-			$headers     = 'MIME-Version: 1.0' . "\r\n";
-			$headers     .= 'Content-type: text/html' . "\r\n";
-			$headers     .= 'From: ' . \get_bloginfo( 'name' ) . ' <' . $sender_mail . '>' . "\r\n";
-			$headers     .= 'Reply-To: ' . $sender_mail;
+			$sender_mail  = \sanitize_email( $_POST['sender_mail'] );
+			$headers_data = 'MIME-Version: 1.0' . "\r\n";
+			$headers_data .= 'Content-type: text/html' . "\r\n";
+			$headers_data .= 'From: ' . \get_bloginfo( 'name' ) . ' <' . $sender_mail . '>' . "\r\n";
+			$headers_data .= 'Reply-To: ' . $sender_mail;
 		} else {
-			$headers = 'MIME-Version: 1.0' . "\r\n";
-			$headers .= 'Content-type: text/html' . "\r\n";
+			$headers_data = 'MIME-Version: 1.0' . "\r\n";
+			$headers_data .= 'Content-type: text/html' . "\r\n";
 		}
+
+		$headers = apply_filters( 'wcme_email_headers', $headers_data );//add some headers
 
 		if ( isset( $_POST['mail_subject'] ) && ! empty( $_POST['mail_subject'] ) ) {
 			$mail_subject = \sanitize_text_field( $_POST['mail_subject'] );
@@ -129,8 +131,8 @@ class Customers_Mailer {
 						if ( isset( $customer['email'] ) ) {
 							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
-								$mail_subject,
-								$mail_content,
+								apply_filters( 'wcme_email_subject_all_users', $mail_subject ),
+								apply_filters( 'wcme_email_content_all_users', $mail_content ),
 								$headers
 							) );
 						}
@@ -147,8 +149,8 @@ class Customers_Mailer {
 						if ( isset( $customer['email'] ) ) {
 							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
-								$mail_subject,
-								$mail_content,
+								apply_filters( 'wcme_email_subject_lefted_cart', $mail_subject ),
+								apply_filters( 'wcme_email_content_lefted_cart', $mail_content ),
 								$headers
 							) );
 						}
@@ -165,8 +167,8 @@ class Customers_Mailer {
 						if ( isset( $customer['email'] ) ) {
 							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
-								$mail_subject,
-								$mail_content,
+								apply_filters( 'wcme_email_subject_bought', $mail_subject ),
+								apply_filters( 'wcme_email_content_bought', $mail_content ),
 								$headers
 							) );
 						}
@@ -184,8 +186,8 @@ class Customers_Mailer {
 						if ( $user ) {
 							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$user->user_email,
-								$mail_subject,
-								$mail_content,
+								apply_filters( 'wcme_email_subject_individual', $mail_subject ),
+								apply_filters( 'wcme_email_content_individual', $mail_content ),
 								$headers
 							) );
 						}
