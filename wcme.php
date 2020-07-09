@@ -38,6 +38,21 @@ if ( ! defined( 'WPINC' ) ) {
 define( 'WCME_VERSION', '1.0.0' );
 //define( 'WCME_ASSETS_URL', plugin_dir_url( __FILE__ ) . 'assets' );
 define( 'WCME_DIR', plugin_dir_path( __FILE__ ) );
+
+/**
+ * Classes autoloader
+ */
+spl_autoload_register( 'wcme_autoloader' );
+function wcme_autoloader( $class_name ) {
+	$classes_dir = realpath( plugin_dir_path( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR;
+	$class_file  = $classes_dir . $class_name . '.php';
+	if ( file_exists( $class_file ) ) {
+		require_once $class_file;
+	}
+
+	return false;
+}
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-wcme-activator.php
