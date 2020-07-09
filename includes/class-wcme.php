@@ -35,7 +35,7 @@ class Wcme {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      Wcme_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Wcme_Loader $loader Maintains and registers all hooks for the plugin.
 	 */
 	protected $loader;
 
@@ -44,7 +44,7 @@ class Wcme {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      string    $plugin_name    The string used to uniquely identify this plugin.
+	 * @var      string $plugin_name The string used to uniquely identify this plugin.
 	 */
 	protected $plugin_name;
 
@@ -53,33 +53,11 @@ class Wcme {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      string    $version    The current version of the plugin.
+	 * @var      string $version The current version of the plugin.
 	 */
 	protected $version;
 
-	/**
-	 * Define the core functionality of the plugin.
-	 *
-	 * Set the plugin name and the plugin version that can be used throughout the plugin.
-	 * Load the dependencies, define the locale, and set the hooks for the admin area and
-	 * the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function __construct() {
-		if ( defined( 'WCME_VERSION' ) ) {
-			$this->version = WCME_VERSION;
-		} else {
-			$this->version = '1.0.0';
-		}
-		$this->plugin_name = 'wcme';
-
-		$this->load_dependencies();
-		$this->set_locale();
-		$this->define_admin_hooks();
-		$this->define_public_hooks();
-
-	}
+	protected $action;
 
 	/**
 	 * Load the required dependencies for this plugin.
@@ -127,6 +105,50 @@ class Wcme {
 	}
 
 	/**
+	 * Define the core functionality of the plugin.
+	 *
+	 * Set the plugin name and the plugin version that can be used throughout the plugin.
+	 * Load the dependencies, define the locale, and set the hooks for the admin area and
+	 * the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function __construct() {
+		if ( defined( 'WCME_VERSION' ) ) {
+			$this->version = WCME_VERSION;
+		} else {
+			$this->version = '1.0.0';
+		}
+		$this->plugin_name = 'wcme';
+		$this->action      = 'wcme_customer_mailer';
+
+		$this->load_dependencies();
+		$this->set_locale();
+		$this->define_admin_hooks();
+		$this->define_public_hooks();
+		$this->customers_mailer();
+		$this->mail_template();
+		$this->users_search_service();
+	}
+
+	private function customers_mailer() {
+		$mailer = new WCME\Customers_Mailer( $this->action );
+		$this->loader->add_action( 'admin_post_' . $this->action, $mailer, 'SendMailRequest' );
+		$this->loader->add_action( 'wsd_send_marketing_mail_task', $mailer, 'SendMail', 10, 4 );
+		$this->loader->add_action( 'admin_notices', $mailer, 'notices' );
+	}
+
+	private function mail_template() {
+		$template = new WCME\Mail_Template();
+		$this->loader->add_filter( 'woocommerce_locate_template', $template, 'marketing_mail_template' );
+	}
+
+	private function users_search_service() {
+		$users = new WCME\Users_Search();
+		$this->loader->add_action( 'wp_ajax_wsd_get_users', $users, 'SearchUsers' );
+	}
+
+	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
 	 * Uses the Wcme_i18n class in order to set the domain and to register the hook
@@ -152,11 +174,11 @@ class Wcme {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Wcme_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new Wcme_Admin( $this->get_plugin_name(), $this->get_version(), $this->action );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'mailer_admin' );
 	}
 
 	/**
@@ -188,8 +210,8 @@ class Wcme {
 	 * The name of the plugin used to uniquely identify it within the context of
 	 * WordPress and to define internationalization functionality.
 	 *
-	 * @since     1.0.0
 	 * @return    string    The name of the plugin.
+	 * @since     1.0.0
 	 */
 	public function get_plugin_name() {
 		return $this->plugin_name;
@@ -198,8 +220,8 @@ class Wcme {
 	/**
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
-	 * @since     1.0.0
 	 * @return    Wcme_Loader    Orchestrates the hooks of the plugin.
+	 * @since     1.0.0
 	 */
 	public function get_loader() {
 		return $this->loader;
@@ -208,8 +230,8 @@ class Wcme {
 	/**
 	 * Retrieve the version number of the plugin.
 	 *
-	 * @since     1.0.0
 	 * @return    string    The version number of the plugin.
+	 * @since     1.0.0
 	 */
 	public function get_version() {
 		return $this->version;

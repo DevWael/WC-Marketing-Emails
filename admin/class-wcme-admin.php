@@ -27,7 +27,7 @@ class Wcme_Admin {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
+	 * @var      string $plugin_name The ID of this plugin.
 	 */
 	private $plugin_name;
 
@@ -36,21 +36,24 @@ class Wcme_Admin {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
+	 * @var      string $version The current version of this plugin.
 	 */
 	private $version;
+	private $action;
 
 	/**
 	 * Initialize the class and set its properties.
 	 *
+	 * @param string $plugin_name The name of this plugin.
+	 * @param string $version The version of this plugin.
+	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct( $plugin_name, $version, $action ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version = $version;
+		$this->version     = $version;
+		$this->action      = $action;
 
 	}
 
@@ -98,6 +101,26 @@ class Wcme_Admin {
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wcme-admin.js', array( 'jquery' ), $this->version, false );
 
+	}
+
+	public function mailer_admin() {
+		add_menu_page(
+			esc_html__( 'Marketing Mails', 'wsd' ),
+			esc_html__( 'Marketing Mails', 'wsd' ),
+			'manage_options',
+			$this->plugin_name . '_admin',
+			array( $this, 'mailer_admin_page' ),
+			false,
+			30 );
+	}
+
+	public function mailer_admin_page() {
+		$action = $this->action;
+		?>
+        <div class="wrap">
+			<?php include WCME_DIR . 'admin/partials/wcme-admin-display.php'; ?>
+        </div>
+		<?php
 	}
 
 }

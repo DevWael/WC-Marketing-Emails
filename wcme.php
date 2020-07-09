@@ -45,9 +45,10 @@ define( 'WCME_DIR', plugin_dir_path( __FILE__ ) );
 spl_autoload_register( 'wcme_autoloader' );
 function wcme_autoloader( $class_name ) {
 	$classes_dir = realpath( plugin_dir_path( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR;
-	$class_file  = $classes_dir . $class_name . '.php';
-	if ( file_exists( $class_file ) ) {
-		require_once $class_file;
+	$class_file  = $class_name . '.php';
+	$class       = $classes_dir . str_replace( '\\', '/', $class_file );
+	if ( file_exists( $class ) ) {
+		require_once $class;
 	}
 
 	return false;
