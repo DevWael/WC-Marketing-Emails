@@ -2,3 +2,27 @@
  * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+.wsd-mailer-section form .customers-select {
+    position: relative;
+}
+
+.wsd-mailer-section form .customers-select.enable-me .overlay {
+    display: none;
+}
+
+.wsd-mailer-section form .customers-select .overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+.wsd-mailer-section form .customers-select select {
+    width: 100%;
+}

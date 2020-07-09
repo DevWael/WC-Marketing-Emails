@@ -5,6 +5,14 @@ defined( 'ABSPATH' ) || exit; //prevent direct file access.
 
 class Customers_Mailer {
 
+	/**
+	 * The ID of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string $plugin_name The ID of this plugin.
+	 */
+	protected $plugin_name;
 	protected $mail_template;
 	protected $default_subject;
 	protected $default_sender;
@@ -13,11 +21,12 @@ class Customers_Mailer {
 	protected $action;
 	protected $customer_data;
 
-	public function __construct( $action ) {
+	public function __construct( $plugin_name, $action ) {
 		$this->mail_template   = 'mail-template-body.php';
 		$this->default_subject = \get_bloginfo( 'name' );
 		$this->default_sender  = \get_option( 'admin_email' );
 		$this->action          = $action;
+		$this->plugin_name     = $plugin_name;
 		$this->customer_data   = new Customer_data();
 	}
 
@@ -52,6 +61,7 @@ class Customers_Mailer {
 	 * @param $headers string email headers
 	 */
 	public function SendMail( $send_to, $subject, $content, $headers = '' ) {
+		//Helpers::log( $send_to );
 		$this->mailer = \WC()->mailer();
 		$message      = $this->EmailMessageContent( $subject, $content );
 		$this->mailer->send( $send_to, $subject, $message, $headers );
@@ -62,17 +72,17 @@ class Customers_Mailer {
 	 */
 	public function SendMailRequest() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			\wp_redirect( admin_url( 'admin.php?page=wsd_admin_welcome' ) ); //not allowed, go to admin home page
+			\wp_redirect( admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' ) ); //not allowed, go to admin home page
 			exit();
 		}
 
 		if ( isset( $_POST['mailer'] ) && ! empty( $_POST['mailer'] ) ) {
 			if ( ! wp_verify_nonce( $_POST['mailer'], 'customer-mailer' ) ) {
-				\wp_redirect( admin_url( 'admin.php?page=wsd-customer-mailer&notice=error&code=1' ) ); //nonce is not found or invalid
+				\wp_redirect( admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=error&code=1' ) ); //nonce is not found or invalid
 				exit();
 			}
 		} else {
-			\wp_redirect( admin_url( 'admin.php?page=wsd-customer-mailer&notice=error&code=1' ) ); //nonce is not found or invalid
+			\wp_redirect( admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=error&code=1' ) ); //nonce is not found or invalid
 			exit();
 		}
 
@@ -96,14 +106,14 @@ class Customers_Mailer {
 		if ( isset( $_POST['mail_subject'] ) && ! empty( $_POST['mail_subject'] ) ) {
 			$mail_subject = \sanitize_text_field( $_POST['mail_subject'] );
 		} else {
-			\wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=error&code=2' ) ); //subject is required
+			\wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=error&code=2' ) ); //subject is required
 			exit();
 		}
 
 		if ( isset( $_POST['customer_type'] ) ) {
 			$customer_type = \sanitize_text_field( $_POST['customer_type'] );
 		} else {
-			\wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=error&code=3' ) ); //customer type is required
+			\wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=error&code=3' ) ); //customer type is required
 			exit();
 		}
 
@@ -117,7 +127,7 @@ class Customers_Mailer {
 				if ( $customers && ! empty( $customers ) ) {
 					foreach ( $customers as $customer ) {
 						if ( isset( $customer['email'] ) ) {
-							\wp_schedule_single_event( time(), 'wsd_send_marketing_mail_task', array(
+							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
 								$mail_subject,
 								$mail_content,
@@ -127,7 +137,7 @@ class Customers_Mailer {
 					}
 				}
 				//Success: redirect to the marketing page with success notice
-				\wp_redirect( admin_url( 'admin.php?page=wsd-customer-mailer&notice=success&code=1' ) );
+				\wp_redirect( admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=success&code=1' ) );
 				exit();
 				break;
 			case 'lefted': //customers who have some products in their cart but didn't complete the checkout
@@ -135,7 +145,7 @@ class Customers_Mailer {
 				if ( $customers && ! empty( $customers ) ) {
 					foreach ( $customers as $customer ) {
 						if ( isset( $customer['email'] ) ) {
-							\wp_schedule_single_event( time(), 'wsd_send_marketing_mail_task', array(
+							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
 								$mail_subject,
 								$mail_content,
@@ -145,7 +155,7 @@ class Customers_Mailer {
 					}
 				}
 				//Success: redirect to the marketing page with success notice
-				\wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=success&code=1' ) );
+				\wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=success&code=1' ) );
 				exit();
 				break;
 			case 'bought':
@@ -153,7 +163,7 @@ class Customers_Mailer {
 				if ( $customers && ! empty( $customers ) ) {
 					foreach ( $customers as $customer ) {
 						if ( isset( $customer['email'] ) ) {
-							\wp_schedule_single_event( time(), 'wsd_send_marketing_mail_task', array(
+							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$customer['email'],
 								$mail_subject,
 								$mail_content,
@@ -163,7 +173,7 @@ class Customers_Mailer {
 					}
 				}
 				//Success: redirect to the marketing page with success notice
-				\wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=success&code=1' ) );
+				\wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=success&code=1' ) );
 				exit();
 				break;
 			case 'individual':
@@ -172,7 +182,7 @@ class Customers_Mailer {
 					foreach ( $customers as $customer ) {
 						$user = \get_user_by( 'ID', $customer );
 						if ( $user ) {
-							\wp_schedule_single_event( time(), 'wsd_send_marketing_mail_task', array(
+							\wp_schedule_single_event( time(), $this->plugin_name . '_send_marketing_mail_task', array(
 								$user->user_email,
 								$mail_subject,
 								$mail_content,
@@ -182,13 +192,13 @@ class Customers_Mailer {
 					}
 				}
 				//Success: redirect to the marketing page with success notice
-				wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=success&code=1' ) );
+				wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=success&code=1' ) );
 				exit();
 				break;
 		}
 
 		//Error: redirect to the marketing page with error notice "wrong customer type"
-		wp_redirect( \admin_url( 'admin.php?page=wsd-customer-mailer&notice=error&code=4' ) );
+		wp_redirect( \admin_url( 'admin.php?page=' . $this->plugin_name . '_admin' . '&notice=error&code=4' ) );
 		exit();
 	}
 
@@ -196,7 +206,7 @@ class Customers_Mailer {
 	 * Display Error and Success Notices
 	 */
 	public function notices() {
-		if ( isset( $_GET['page'] ) && $_GET['page'] === 'wsd-customer-mailer' ) {
+		if ( isset( $_GET['page'] ) && $_GET['page'] === $this->plugin_name . '_admin' ) {
 			$code = $notice = '';
 			if ( isset( $_GET['code'] ) && ! empty( $_GET['code'] ) ) {
 				$code = $_GET['code'];

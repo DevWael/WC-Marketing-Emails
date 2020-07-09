@@ -40,6 +40,7 @@ class Wcme_Admin {
 	 */
 	private $version;
 	private $action;
+	private $users_action;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -49,11 +50,12 @@ class Wcme_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function __construct( $plugin_name, $version, $action ) {
+	public function __construct( $plugin_name, $version, $action, $users_action ) {
 
 		$this->plugin_name = $plugin_name;
-		$this->version     = $version;
-		$this->action      = $action;
+		$this->version = $version;
+		$this->action = $action;
+		$this->users_action = $users_action;
 
 	}
 
@@ -75,7 +77,7 @@ class Wcme_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
+		wp_enqueue_style( 'select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/css/select2.min.css', false, "4.0.10", false );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wcme-admin.css', array(), $this->version, 'all' );
 
 	}
@@ -98,9 +100,16 @@ class Wcme_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
+		wp_enqueue_script( 'select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js', array( 'jquery' ), '4.0.10' );
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wcme-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wcme-admin.js', array(
+			'jquery',
+		), $this->version,true );
 
+		wp_localize_script( $this->plugin_name, $this->plugin_name . '_obj', array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'action'  => $this->users_action
+		) );
 	}
 
 	public function mailer_admin() {

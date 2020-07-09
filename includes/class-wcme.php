@@ -58,6 +58,7 @@ class Wcme {
 	protected $version;
 
 	protected $action;
+	protected $users_action;
 
 	/**
 	 * Load the required dependencies for this plugin.
@@ -119,8 +120,9 @@ class Wcme {
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->plugin_name = 'wcme';
-		$this->action      = 'wcme_customer_mailer';
+		$this->plugin_name  = 'wcme';
+		$this->action       = 'wcme_customer_mailer';
+		$this->users_action = $this->plugin_name . '_get_users';
 
 		$this->load_dependencies();
 		$this->set_locale();
@@ -132,20 +134,20 @@ class Wcme {
 	}
 
 	private function customers_mailer() {
-		$mailer = new WCME\Customers_Mailer( $this->action );
+		$mailer = new WCME\Customers_Mailer( $this->plugin_name, $this->action );
 		$this->loader->add_action( 'admin_post_' . $this->action, $mailer, 'SendMailRequest' );
-		$this->loader->add_action( 'wsd_send_marketing_mail_task', $mailer, 'SendMail', 10, 4 );
+		$this->loader->add_action( $this->plugin_name . '_send_marketing_mail_task', $mailer, 'SendMail', 10, 4 );
 		$this->loader->add_action( 'admin_notices', $mailer, 'notices' );
 	}
 
 	private function mail_template() {
 		$template = new WCME\Mail_Template();
-		$this->loader->add_filter( 'woocommerce_locate_template', $template, 'marketing_mail_template' );
+		$this->loader->add_filter( 'woocommerce_locate_template', $template, 'marketing_mail_template', 10, 3 );
 	}
 
 	private function users_search_service() {
 		$users = new WCME\Users_Search();
-		$this->loader->add_action( 'wp_ajax_wsd_get_users', $users, 'SearchUsers' );
+		$this->loader->add_action( 'wp_ajax_' . $this->users_action, $users, 'SearchUsers' );
 	}
 
 	/**
@@ -173,9 +175,7 @@ class Wcme {
 	 * @access   private
 	 */
 	private function define_admin_hooks() {
-
-		$plugin_admin = new Wcme_Admin( $this->get_plugin_name(), $this->get_version(), $this->action );
-
+		$plugin_admin = new Wcme_Admin( $this->get_plugin_name(), $this->get_version(), $this->action, $this->users_action );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'mailer_admin' );

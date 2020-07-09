@@ -12,7 +12,7 @@
  * @subpackage Wcme/admin/partials
  */
 defined( 'ABSPATH' ) || exit; //prevent direct file access.
-global $action;
+
 ?>
 
 <h2><?php esc_html_e( 'Marketing Mails', 'wsd' ); ?></h2>
