@@ -36,7 +36,8 @@ if ( ! defined( 'WPINC' ) ) {
  * Rename this for your plugin and update it as you release new versions.
  */
 define( 'WCME_VERSION', '1.0.0' );
-
+//define( 'WCME_ASSETS_URL', plugin_dir_url( __FILE__ ) . 'assets' );
+define( 'WCME_DIR', plugin_dir_path( __FILE__ ) );
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-wcme-activator.php
@@ -79,4 +80,18 @@ function run_wcme() {
 	$plugin->run();
 
 }
+
 run_wcme();
+
+/**
+ * Plugin Update Service
+ */
+require WCME_DIR . 'plugin-update-checker-4.9/plugin-update-checker.php';
+add_action( 'plugins_loaded', function () {
+	Puc_v4_Factory::buildUpdateChecker(
+		'https://github.com/DevWael/WC-Marketing-Emails',
+		__FILE__,
+		'WC-Marketing-Emails',
+		24
+	);
+} );
